@@ -1,0 +1,26 @@
+data:
+    5, num (4)
+    1, factorial (4)
+    1, i (4)
+
+instructions:
+exc:
+    loop : (i <= num)
+        exc :
+            du : factorial * i, factorial
+            du : i + 1, i
+        end
+    if : (factorial < 120)
+        exc:
+            onsc : "The factorial of % is %", num, factorial
+        end
+    else :
+        exc:
+            onsc : "Factorial is too big."
+        end
+end
+
+
+
+
+
