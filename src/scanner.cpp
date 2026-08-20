@@ -40,6 +40,17 @@ void handle_str(const char* base, int &i){
     token.push_back({TokenType::STRING,lexeme});
 }
 
+void handle_special(const char* base){
+    std::string lexeme = "";
+    lexeme.push_back(*(base));
+    if(symbolMap.count(lexeme) > 0){
+        token.push_back({symbolMap[lexeme],lexeme});
+    }
+    else{
+        token.push_back({TokenType::UNKNOWN,lexeme});
+    }
+}
+
 void handle_digit(const char* base, int &i){
     std::string lexeme = "";
     while(isdigit(*base)){
@@ -82,12 +93,7 @@ void scan(std::vector<char>& code_dump){
 
         else if(code_dump[i] == '"') handle_str(&code_dump[i],i);
 
-        else if(!isalnum(code_dump[i])){
-            lexeme = code_dump[i];
-            if(symbolMap.count(lexeme) > 0) token.push_back({symbolMap[lexeme],lexeme});
-            else token.push_back({TokenType::UNKNOWN,lexeme});
-        }
-
+        else if(!isalnum(code_dump[i])) handle_special(&code_dump[i]);
         else if(isdigit(code_dump[i])) handle_digit(&code_dump[i],i);
 
         else handle_alphnum(&code_dump[i],i);

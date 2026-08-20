@@ -12,7 +12,7 @@ enum class TokenType {
     L_AB, R_AB, PRN_LROUND, PRN_RROUND,
     COMMA, COLON,
     KW_PRINT, D_QUOTE,
-    DATA, TEXT,
+    KW_DATA, KW_TEXT,
     BEGIN, END,
     UNKNOWN
 };

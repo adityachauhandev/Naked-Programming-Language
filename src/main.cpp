@@ -6,6 +6,7 @@
 
 #include "scanner.h"
 #include "token.h"
+#include "parser.h"
 
 int main(){
     auto start = std::chrono::high_resolution_clock::now();
@@ -26,8 +27,9 @@ int main(){
     fill_strrepMap(strrepMap);
 
     scan(code_dump);
+    parser(token);
 
-    std::cout << std::left
+    /*std::cout << std::left
      << std::setw(20) << "TYPE"
      << std::setw(30) << "LEXEME"
      << '\n';
@@ -38,7 +40,7 @@ int main(){
          << std::setw(20) << strrepMap[x.type]
          << std::setw(30) << x.lexeme
          << '\n';
-     }
+     }*/
 
     return 0;
 }
