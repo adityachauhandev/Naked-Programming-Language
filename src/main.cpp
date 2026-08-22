@@ -9,7 +9,6 @@
 #include "parser.h"
 
 int main(){
-    auto start = std::chrono::high_resolution_clock::now();
     std::ifstream source_code("tests/code.npl", std::ios::binary | std::ios::ate);
 
     if(!source_code) {
