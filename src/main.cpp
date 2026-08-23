@@ -21,12 +21,16 @@ int main(){
 
     source_code.seekg(0,std::ios::beg);
     source_code.read(code_dump.data(), file_size);
+    code_dump.push_back('\0');
 
     fill_symbolMap(symbolMap);
     fill_strrepMap(strrepMap);
 
     scan(code_dump);
-    parser(token);
+    token.push_back({TokenType::END_OF_FILE,""});
+
+    Parser p(token);
+    p.parse();
 
     /*std::cout << std::left
      << std::setw(20) << "TYPE"

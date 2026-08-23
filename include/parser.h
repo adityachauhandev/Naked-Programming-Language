@@ -1,15 +1,23 @@
 #pragma once
 #include <vector>
+#include <string>
 
-void parser(std::vector<Token>& token);
+#include "token.h"
 
 enum class Sequence {
     INIT_NODE,
-    BINARY_NODE,
-    UNARY_NODE,
-    UNARY_IF,
-    BINARY_IF,
-    ELSE_NODE
+    UPDATE_NODE,
+    ELSE_NODE,
+    FLOW_NODE,
+    PRINT_NODE
+};
+
+struct Expression{
+    std::string id1;
+    TokenType id1type;
+    TokenType optype;
+    std::string id2;
+    TokenType id2type;
 };
 
 struct InitNode{
@@ -18,31 +26,64 @@ struct InitNode{
     std::string name;
 };
 
-struct BinaryNode{
-    std::string id1;
-    TokenType id1type;
-    TokenType optype;
-    std::string id2;
-    TokenType id2type;
+struct UpdateNode{
+    Expression expr;
     std::string target;
 };
 
-struct UnaryNode{
-    std::string id;
-    TokenType idtype;
-    std::string target;
+struct FlowNode{
+    Expression expr;
+    TokenType block_tp;
 };
 
-struct UnaryIFNode{
-    std::string id;
-    TokenType idtype;
+struct onscArg{
+    std::string value;
+    TokenType tp;
 };
 
-struct BinaryIFNode{
-    std::string id1;
-    TokenType id1type;
-    TokenType cmptype;
-    std::string id2;
-    TokenType id2type;
+struct onscNode{
+    std::string str;
+    std::vector<onscArg> arg_vec;
 };
+
+class Parser {
+private:
+    std::vector<Token> token_vector;
+    int curr_index;
+    int size_token_vec;
+
+    std::vector<Sequence> node_sequence_vector;
+    std::vector<InitNode> init_node_vector;
+    std::vector<UpdateNode> update_node_vector;
+    std::vector<FlowNode> flow_node_vector;
+    std::vector<onscNode> onsc_node_vector;
+
+    void expect(TokenType expected_tp);
+    void expect(TokenType expected_tp1,TokenType expected_tp2);
+    TokenType get_tp();
+    std::string get_lxm();
+    void advance();
+    void syntaxErrStr(TokenType expected_tp, TokenType curr_tp);
+    void syntaxErrStr(TokenType expected_tp1,TokenType expected_tp2,TokenType curr_tp);
+    void parse_kwdata();
+    void parse_kwtext();
+    void parse_init();
+    void parse_instructions();
+    void parse_update();
+    bool is_binop(TokenType tp);
+    bool is_bincmp(TokenType tp);
+    Expression parse_expression();
+    void parse_controlFlow();
+    void parse_onsc();
+
+public:
+    Parser(std::vector<Token> &token){
+        token_vector = token;
+        curr_index = 0;
+        size_token_vec = token_vector.size();
+    }
+    void parse();
+};
+
+
 

@@ -22,7 +22,6 @@ void fill_symbolMap(std::unordered_map<std::string,TokenType>& symbolMap){
     symbolMap["="] = TokenType::EQ;
     symbolMap[">="] = TokenType::EQ_G;
     symbolMap["<="] = TokenType::EQ_L;
-    symbolMap["ddi"] = TokenType::KW_DDI;
     symbolMap["du"] = TokenType::KW_DU;
     symbolMap["onsc"] = TokenType::KW_PRINT;
     symbolMap["\""] = TokenType::D_QUOTE;
@@ -47,7 +46,6 @@ void fill_strrepMap(std::unordered_map<TokenType,std::string> &strrepMap){
     strrepMap[TokenType::EQ]             = "EQ";
     strrepMap[TokenType::EQ_G]           = "EQ_G";
     strrepMap[TokenType::EQ_L]           = "EQ_L";
-    strrepMap[TokenType::KW_DDI]         = "KW_DDI";
     strrepMap[TokenType::KW_DU]          = "KW_DU";
     strrepMap[TokenType::IDENTIFIER]     = "IDENTIFIER";
     strrepMap[TokenType::INTEGER]        = "INTEGER";
@@ -58,4 +56,5 @@ void fill_strrepMap(std::unordered_map<TokenType,std::string> &strrepMap){
     strrepMap[TokenType::KW_TEXT]        = "KW_TEXT";
     strrepMap[TokenType::BEGIN]          = "BEGIN";
     strrepMap[TokenType::END]            = "END";
+    strrepMap[TokenType::END_OF_FILE]    = "EOF";
  }

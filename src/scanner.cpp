@@ -28,16 +28,18 @@ void handle_RAB(const char* base, int &i){
 }
 
 void handle_str(const char* base, int &i){
-    std::string lexeme = "\"";
+    token.push_back({TokenType::D_QUOTE,"\""});
+    std::string lexeme = "";
     base++;
+    i++;
     while(*(base) != '"' && *(base) != '\0'){
         lexeme.push_back(*(base));
         base++;
         i++;
     }
-    lexeme.push_back(*(base));
-    i++;
     token.push_back({TokenType::STRING,lexeme});
+    if(*(base) == '"') token.push_back({TokenType::D_QUOTE,"\""});
+    else token.push_back({TokenType::END_OF_FILE,""});
 }
 
 void handle_special(const char* base){
