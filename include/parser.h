@@ -7,6 +7,8 @@
 enum class Sequence {
     INIT_NODE,
     UPDATE_NODE,
+    BEGIN,END,
+    BEGIN_MAIN,END_MAIN,BEGIN_IF,END_IF,BEGIN_ELSE,END_ELSE,BEGIN_LOOP,END_LOOP,
     ELSE_NODE,
     FLOW_NODE,
     PRINT_NODE
@@ -33,7 +35,7 @@ struct UpdateNode{
 
 struct FlowNode{
     Expression expr;
-    TokenType block_tp;
+    TokenType flow_tp;
 };
 
 struct onscArg{
@@ -46,6 +48,15 @@ struct onscNode{
     std::vector<onscArg> arg_vec;
 };
 
+struct ParserOutput{
+    std::vector<Sequence> node_sequence_vector;
+    std::vector<int> node_combined_index;
+    std::vector<InitNode> init_node_vector;
+    std::vector<UpdateNode> update_node_vector;
+    std::vector<FlowNode> flow_node_vector;
+    std::vector<onscNode> onsc_node_vector;
+};
+
 class Parser {
 private:
     std::vector<Token> token_vector;
@@ -53,6 +64,7 @@ private:
     int size_token_vec;
 
     std::vector<Sequence> node_sequence_vector;
+    std::vector<int> node_combined_index;
     std::vector<InitNode> init_node_vector;
     std::vector<UpdateNode> update_node_vector;
     std::vector<FlowNode> flow_node_vector;
@@ -73,7 +85,7 @@ private:
     bool is_binop(TokenType tp);
     bool is_bincmp(TokenType tp);
     Expression parse_expression();
-    void parse_controlFlow();
+    void parse_controlFlow(TokenType tp);
     void parse_onsc();
 
 public:
@@ -82,7 +94,7 @@ public:
         curr_index = 0;
         size_token_vec = token_vector.size();
     }
-    void parse();
+    ParserOutput parse();
 };
 
 

@@ -2,11 +2,11 @@
 #include <fstream>
 #include <vector>
 #include <iomanip>
-#include <chrono>
 
 #include "scanner.h"
 #include "token.h"
 #include "parser.h"
+#include "interpreter.h"
 
 int main(){
     std::ifstream source_code("tests/code.npl", std::ios::binary | std::ios::ate);
@@ -30,9 +30,12 @@ int main(){
     token.push_back({TokenType::END_OF_FILE,""});
 
     Parser p(token);
-    p.parse();
+    ParserOutput p_output = p.parse();
 
-    /*std::cout << std::left
+    Interpreter e(p_output);
+    e.interpret();
+
+        /*std::cout << std::left
      << std::setw(20) << "TYPE"
      << std::setw(30) << "LEXEME"
      << '\n';

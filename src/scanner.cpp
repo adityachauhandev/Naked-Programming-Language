@@ -87,7 +87,7 @@ void scan(std::vector<char>& code_dump){
     for(int i = 0; i < code_len; i++){
         std::string lexeme = "";
 
-        if(std::isspace(code_dump[i])) continue;
+        if(std::isspace(code_dump[i]) || code_dump[i] == '\0') continue;
 
         if(code_dump[i] == '<') handle_LAB(&code_dump[i],i);
 

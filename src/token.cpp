@@ -56,5 +56,5 @@ void fill_strrepMap(std::unordered_map<TokenType,std::string> &strrepMap){
     strrepMap[TokenType::KW_TEXT]        = "KW_TEXT";
     strrepMap[TokenType::BEGIN]          = "BEGIN";
     strrepMap[TokenType::END]            = "END";
-    strrepMap[TokenType::END_OF_FILE]    = "EOF";
+    strrepMap[TokenType::END_OF_FILE]    = "END_OF_FILE";
  }
