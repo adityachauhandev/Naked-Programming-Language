@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <stack>
 
@@ -14,32 +15,31 @@ Sequence Interpreter::get_nodetp(){
 
 void Interpreter::handle_init(){
     int actual_index = node_combined_index[curr_index];
-    InitNode n = init_node_vector[actual_index];
-    symTable[n.name] = std::stoi(n.value);
+    const InitNode &n = init_node_vector[actual_index];
+    symTable[n.name] = n.value;
 }
 
-int Interpreter::handle_expression(Expression &expr){
+int Interpreter::handle_expression(const Expression &expr){
     int id1 = 0;
     int id2 = 0;
 
-
-    switch(expr.id1type){
-        case TokenType::INTEGER:
-            id1 = std::stoi(expr.id1);
+    switch(expr.id1.index()){
+        case 0:
+            id1 = std::get<0>(expr.id1);
             break;
-        case TokenType::IDENTIFIER:
-            id1 = symTable.at(expr.id1);
+        case 1:
+            id1 = symTable.at(std::get<1>(expr.id1));
             break;
     }
 
-    switch(expr.id2type){
-        case TokenType::INTEGER:
-            id2 = std::stoi(expr.id2);
+    switch(expr.id2.index()){
+        case 0:
+            id2 = std::get<0>(expr.id2);
             break;
-        case TokenType::IDENTIFIER:
-            id2 = symTable.at(expr.id2);
+        case 1:
+            id2 = symTable.at(std::get<1>(expr.id2));
             break;
-        case TokenType::EMPTY:
+        default:
             return id1;
             break;
     }
@@ -58,36 +58,36 @@ int Interpreter::handle_expression(Expression &expr){
 
 void Interpreter::handle_update(){
     int actual_index = node_combined_index[curr_index];
-    UpdateNode n = update_node_vector[actual_index];
-    Expression expr = n.expr;
-    std::string target = n.target;
+    const UpdateNode &n = update_node_vector[actual_index];
+    const Expression &expr = n.expr;
+    const std::string_view &target = n.target;
 
     int result = handle_expression(expr);
 
     if(symTable.count(target) > 0) symTable[target] = result;
 }
 
-bool Interpreter::handle_condCheck(Expression expr){
+bool Interpreter::handle_condCheck(const Expression &expr){
     int id1 = 0;
     int id2 = 0;
 
-    switch(expr.id1type){
-        case TokenType::INTEGER:
-            id1 = std::stoi(expr.id1);
+    switch(expr.id1.index()){
+        case 0:
+            id1 = std::get<0>(expr.id1);
             break;
-        case TokenType::IDENTIFIER:
-            id1 = symTable.at(expr.id1);
+        case 1:
+            id1 = symTable.at(std::get<1>(expr.id1));
             break;
     }
 
-    switch(expr.id2type){
-        case TokenType::INTEGER:
-            id2 = std::stoi(expr.id2);
+    switch(expr.id2.index()){
+        case 0:
+            id2 = std::get<0>(expr.id2);
             break;
-        case TokenType::IDENTIFIER:
-            id2 = symTable.at(expr.id2);
+        case 1:
+            id2 = symTable.at(std::get<1>(expr.id2));
             break;
-        case TokenType::EMPTY:
+        default:
             return static_cast<bool>(id1);
             break;
     }
@@ -185,9 +185,9 @@ void Interpreter::handle_loop(bool cond_result){
 
 void Interpreter::handle_flow(){
     int actual_index = node_combined_index[curr_index];
-    FlowNode n = flow_node_vector[actual_index];
+    const FlowNode &n = flow_node_vector[actual_index];
 
-    Expression expr = n.expr;
+    const Expression &expr = n.expr;
 
     bool cond_result = handle_condCheck(expr);
 
@@ -203,29 +203,22 @@ void Interpreter::handle_flow(){
 
 void Interpreter::handle_print(){
     int actual_index = node_combined_index[curr_index];
-    onscNode n = onsc_node_vector[actual_index];
-    int i = 0;
-    std::string final_string = "";
+    const onscNode &n = onsc_node_vector[actual_index];
     int arg_vec_index = 0;
 
-    while(i < n.str.size()){
-        if(n.str[i] == '%'){
-            switch(n.arg_vec[arg_vec_index].tp){
-                case TokenType::INTEGER:
-                    final_string += n.arg_vec[arg_vec_index].value;
-                    break;
-                case TokenType::IDENTIFIER:
-                    final_string += std::to_string(symTable.at(n.arg_vec[arg_vec_index].value));
-                    break;
+    for (size_t i = 0; i < n.str.size(); ++i) {
+        if (n.str[i] == '%') {
+            if (n.arg_vec[arg_vec_index].value.index() == 0) {
+                std::cout << std::get<0>(n.arg_vec[arg_vec_index].value);
+            } else {
+                std::cout << symTable[std::get<1>(n.arg_vec[arg_vec_index].value)];
             }
             arg_vec_index++;
+        } else {
+            std::cout << n.str[i];
         }
-        else final_string += n.str[i];
-
-        i++;
     }
-
-    std::cout << final_string << std::endl;
+    std::cout << '\n';
 }
 
 void Interpreter::interpret(){

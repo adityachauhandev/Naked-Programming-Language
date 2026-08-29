@@ -1,6 +1,8 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <string_view>
+#include <variant>
 
 #include "token.h"
 
@@ -15,22 +17,21 @@ enum class Sequence {
 };
 
 struct Expression{
-    std::string id1;
-    TokenType id1type;
-    TokenType optype;
-    std::string id2;
-    TokenType id2type;
+    std::variant<int,std::string_view> id1;
+    TokenType id1type = TokenType::EMPTY;
+    TokenType optype = TokenType::EMPTY;
+    std::variant<int,std::string_view> id2;
+    TokenType id2type = TokenType::EMPTY;
 };
 
 struct InitNode{
-    std::string bytes;
-    std::string value;
-    std::string name;
+    int value;
+    std::string_view name;
 };
 
 struct UpdateNode{
     Expression expr;
-    std::string target;
+    std::string_view target;
 };
 
 struct FlowNode{
@@ -39,12 +40,12 @@ struct FlowNode{
 };
 
 struct onscArg{
-    std::string value;
+    std::variant<int,std::string_view> value;
     TokenType tp;
 };
 
 struct onscNode{
-    std::string str;
+    std::string_view str;
     std::vector<onscArg> arg_vec;
 };
 
@@ -59,8 +60,8 @@ struct ParserOutput{
 
 class Parser {
 private:
-    std::vector<Token> token_vector;
-    int curr_index;
+    const std::vector<Token>& token_vector;
+    int curr_index = 0;
     int size_token_vec;
 
     std::vector<Sequence> node_sequence_vector;
@@ -73,7 +74,7 @@ private:
     void expect(TokenType expected_tp);
     void expect(TokenType expected_tp1,TokenType expected_tp2);
     TokenType get_tp();
-    std::string get_lxm();
+    std::string_view get_lxm();
     void advance();
     void syntaxErrStr(TokenType expected_tp, TokenType curr_tp);
     void syntaxErrStr(TokenType expected_tp1,TokenType expected_tp2,TokenType curr_tp);
@@ -84,14 +85,14 @@ private:
     void parse_update();
     bool is_binop(TokenType tp);
     bool is_bincmp(TokenType tp);
+    void resolve_id(std::variant<int, std::string_view>& id, TokenType& tp);
+    bool resolve_op(TokenType& op_tp);
     Expression parse_expression();
     void parse_controlFlow(TokenType tp);
     void parse_onsc();
 
 public:
-    Parser(std::vector<Token> &token){
-        token_vector = token;
-        curr_index = 0;
+    Parser(const std::vector<Token>& token): token_vector(token) {
         size_token_vec = token_vector.size();
     }
     ParserOutput parse();

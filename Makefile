@@ -1,11 +1,12 @@
-run:
+build:
 	mkdir -p build
-	g++ -Iinclude src/main.cpp src/scanner.cpp src/token.cpp src/parser.cpp src/interpreter.cpp -o build/compiler
+	g++ -O3 -Iinclude src/main.cpp src/scanner.cpp src/parser.cpp src/interpreter.cpp -o build/compiler
+
+run: build
 	./build/compiler
 
-debug:
-	mkdir -p build
-	g++ -g -Iinclude src/main.cpp src/scanner.cpp src/token.cpp src/parser.cpp src/interpreter.cpp -o build/compiler
+debug: build
+	g++ -g -Iinclude src/main.cpp src/scanner.cpp src/parser.cpp src/interpreter.cpp -o build/compiler
 	gdb ./build/compiler
 
 clean:

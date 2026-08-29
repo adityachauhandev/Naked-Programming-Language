@@ -1,26 +1,11 @@
 data:
-    6, num (4)
-    1, factorial (4)
-    1, i (4)
+    100000000, num
+    0, i
 
 instructions:
 exc:
-    loop : i <= num
-        exc :
-            du : factorial * i, factorial
-            du : i + 1, i
-        end
-    if : factorial <= 1440
-        exc:
-            onsc : "The factorial of % is %", num, factorial
-        end
-    else :
-        exc:
-            onsc : "Factorial is too big."
-        end
+    loop : i < num
+    exc:
+        du : i + 1, i
+    end
 end
-
-
-
-
-

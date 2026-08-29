@@ -1,36 +1,35 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <charconv>
+#include <variant>
+#include <string_view>
 #include "token.h"
 #include "parser.h"
 
 void Parser::syntaxErrStr(TokenType expected_tp, TokenType curr_tp){
-    std::cout << "There was a syntax error.\n";
-    std::cout << "Expected token type was : " << strrepMap[expected_tp] <<"\n";
-    std::cout << "Got : " << strrepMap[curr_tp] <<"\n";
+    std::cerr << "There was a syntax error.\n";
     std::exit(1);
 }
 
 void Parser::syntaxErrStr(TokenType expected_tp1,TokenType expected_tp2,TokenType curr_tp){
-    std::cout << "There was a syntax error.\n";
-    std::cout << "Expected token type was : " << strrepMap[expected_tp1] <<" "<<"or"<< " "<<strrepMap[expected_tp2]<<"\n";
-    std::cout << "Got : " << strrepMap[curr_tp] <<"\n";
+    std::cerr << "There was a syntax error.\n";
     std::exit(1);
 }
 
 void Parser::advance(){
-    //std::cout << "Consumed : " << strrepMap[get_tp()] <<"\n";
     curr_index++;
+    //TODO:Check the bound
 }
 
 TokenType Parser::get_tp(){
+    //TODO:Check the bound
     TokenType curr_tp = token_vector[curr_index].type;
     return curr_tp;
 }
 
-std::string Parser::get_lxm(){
-    std::string curr_lxm = token_vector[curr_index].lexeme;
-    return curr_lxm;
+std::string_view Parser::get_lxm(){
+    return token_vector[curr_index].lexeme;
 }
 
 void Parser::expect(TokenType expected_tp){
@@ -49,27 +48,27 @@ void Parser::expect(TokenType expected_tp1,TokenType expected_tp2){
 
 void Parser::parse_init(){
     expect(TokenType::INTEGER);
-    std::string value = get_lxm();
-    advance();
-    expect(TokenType::COMMA);
-    advance();
-    expect(TokenType::IDENTIFIER);
-    std::string name = get_lxm();
-    advance();
-    expect(TokenType::PRN_LROUND);
-    advance();
-    expect(TokenType::INTEGER);
-    std::string bytes = get_lxm();
-    advance();
-    expect(TokenType::PRN_RROUND);
+    int value;
+    std::string_view num_lxm = get_lxm();
+    std::from_chars(num_lxm.data(), num_lxm.data() + num_lxm.size(), value);
+
     advance();
 
-    init_node_vector.push_back({bytes,value,name});
+    expect(TokenType::COMMA);
+    advance();
+
+    expect(TokenType::IDENTIFIER);
+    std::string_view name = get_lxm();
+    advance();
+
+    init_node_vector.push_back({value,name});
     node_sequence_vector.push_back(Sequence::INIT_NODE);
     node_combined_index.push_back(init_node_vector.size() - 1);
 }
 
 void Parser::parse_kwdata(){
+    expect(TokenType::KW_DATA);
+    advance();
     expect(TokenType::COLON);
     advance();
 
@@ -87,35 +86,51 @@ bool Parser::is_binop(TokenType tp){
     return tp == TokenType::PLUS || tp == TokenType::MUL;
 }
 
-Expression Parser::parse_expression(){
-    Expression expr;
-    expr.optype = TokenType::EMPTY;
-    expr.id2 = "";
-    expr.id2type = TokenType::EMPTY;
+void Parser::resolve_id(std::variant<int, std::string_view>& id, TokenType& tp)
+{
+    expect(TokenType::INTEGER, TokenType::IDENTIFIER);
 
-    expect(TokenType::INTEGER,TokenType::IDENTIFIER);
-    expr.id1 = get_lxm();
-    expr.id1type = get_tp();
-    advance();
-
-    if(is_bincmp(get_tp()) || is_binop(get_tp())){
-        expr.optype = get_tp();
-        advance();
-
-        expect(TokenType::INTEGER,TokenType::IDENTIFIER);
-        expr.id2 = get_lxm();
-        expr.id2type = get_tp();
-        advance();
+    std::string_view lxm = get_lxm();
+    if (get_tp() == TokenType::INTEGER) {
+        int temp = 0;
+        std::from_chars(lxm.data(), lxm.data() + lxm.size(), temp);
+        id = temp;
+    } else {
+        id = lxm;
     }
+    tp = get_tp();
+    advance();
+}
+
+bool Parser::resolve_op(TokenType& op_tp) {
+    if (is_bincmp(get_tp()) || is_binop(get_tp())) {
+        op_tp = get_tp();
+        advance();
+        return true;
+    }
+    return false;
+}
+
+Expression Parser::parse_expression() {
+    Expression expr;
+    resolve_id(expr.id1, expr.id1type);
+    if (resolve_op(expr.optype)) resolve_id(expr.id2, expr.id2type);
     return expr;
 }
 
 void Parser::parse_update(){
+    advance();
+
+    expect(TokenType::COLON);
+    advance();
+
     Expression expr = parse_expression();
+
     expect(TokenType::COMMA);
     advance();
+
     expect(TokenType::IDENTIFIER);
-    std::string target = get_lxm();
+    std::string_view target = get_lxm();
     advance();
 
     update_node_vector.push_back({expr,target});
@@ -184,15 +199,15 @@ void Parser::parse_controlFlow(TokenType tp){
 }
 
 void Parser::parse_onsc(){
-    std::string str = "";
+    std::string_view str = "";
     TokenType arg_tp = TokenType::EMPTY;
-    std::string arg_vl = "";
+    std::variant<int,std::string_view> arg_vl;
     std::vector<onscArg> arg_vector;
 
     expect(TokenType::D_QUOTE);
     advance();
     expect(TokenType::STRING);
-    str += get_lxm();
+    str = get_lxm();
     advance();
     expect(TokenType::D_QUOTE);
     advance();
@@ -200,7 +215,14 @@ void Parser::parse_onsc(){
         advance();
         expect(TokenType::INTEGER,TokenType::IDENTIFIER);
         arg_tp = get_tp();
-        arg_vl = get_lxm();
+        if(arg_tp == TokenType::INTEGER){
+            int temp = 0;
+            std::string_view num_lxm = get_lxm();
+            std::from_chars(num_lxm.data(), num_lxm.data() + num_lxm.size(), temp);
+            arg_vl = temp;
+        }
+        else arg_vl = get_lxm();
+
         arg_vector.push_back({arg_vl,arg_tp});
         advance();
     }
@@ -215,9 +237,6 @@ void Parser::parse_instructions(){
     while(curr_tp != TokenType::END){
         switch(curr_tp){
             case TokenType::KW_DU:
-                advance();
-                expect(TokenType::COLON);
-                advance();
                 parse_update();
                 break;
             case TokenType::KW_IF:
@@ -240,7 +259,6 @@ void Parser::parse_instructions(){
                 break;
             default:
                 std::cout << "Unexpected Token" << std::endl;
-                std::cout << strrepMap[get_tp()] << std::endl;
                 std::exit(1);
         }
         curr_tp = get_tp();
@@ -250,12 +268,15 @@ void Parser::parse_instructions(){
 void Parser::parse_kwtext(){
     expect(TokenType::KW_TEXT);
     advance();
+
     expect(TokenType::COLON);
     advance();
+
     expect(TokenType::BEGIN);
     node_sequence_vector.push_back(Sequence::BEGIN_MAIN);
     node_combined_index.push_back(-1);
     advance();
+
     expect(TokenType::COLON);
     advance();
 
@@ -269,8 +290,6 @@ void Parser::parse_kwtext(){
 }
 
 ParserOutput Parser::parse(){
-    expect(TokenType::KW_DATA);
-    advance();
     parse_kwdata();
     parse_kwtext();
 

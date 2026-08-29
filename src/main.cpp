@@ -1,33 +1,46 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <iomanip>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string_view>
 
 #include "scanner.h"
+#include "map.h"
 #include "token.h"
 #include "parser.h"
 #include "interpreter.h"
 
 int main(){
-    std::ifstream source_code("tests/code.npl", std::ios::binary | std::ios::ate);
-
-    if(!source_code) {
-        std::cout<< "Couldn't open the file\n";
+    int fd = open("tests/code.npl", O_RDONLY);
+    if (fd == -1) {
+        std::cout << "Couldn't open the file\n";
         return 1;
     }
 
-    unsigned int file_size = source_code.tellg();
-    std::vector<char> code_dump(file_size);
+    struct stat sb;
+    if (fstat(fd, &sb) == -1) {
+        std::cout << "Couldn't get the metadata\n";
+        close(fd);
+        return 1;
+    }
+    size_t file_size = sb.st_size;
 
-    source_code.seekg(0,std::ios::beg);
-    source_code.read(code_dump.data(), file_size);
-    code_dump.push_back('\0');
+    const char* file_data = static_cast<const char*>(mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0));
+    if (file_data == MAP_FAILED) {
+        std::cout << "Memory mapping failed\n";
+        close(fd);
+        return 1;
+    }
 
-    fill_symbolMap(symbolMap);
-    fill_strrepMap(strrepMap);
+    madvise(const_cast<char*>(file_data), file_size, MADV_SEQUENTIAL);
+    madvise(const_cast<char*>(file_data), file_size, MADV_WILLNEED);
+    std::string_view code_dump(file_data, file_size);
 
-    scan(code_dump);
-    token.push_back({TokenType::END_OF_FILE,""});
+    Scanner s(code_dump);
+    const std::vector<Token>& token = s.scan();
 
     Parser p(token);
     ParserOutput p_output = p.parse();
@@ -35,18 +48,11 @@ int main(){
     Interpreter e(p_output);
     e.interpret();
 
-        /*std::cout << std::left
-     << std::setw(20) << "TYPE"
-     << std::setw(30) << "LEXEME"
-     << '\n';
-     for(auto x : token){
-         std::cout << std::string(50, '-') << '\n';
-
-         std::cout << std::left
-         << std::setw(20) << strrepMap[x.type]
-         << std::setw(30) << x.lexeme
-         << '\n';
-     }*/
+    if (munmap(const_cast<char*>(file_data), file_size) == -1) {
+        std::cout << "munmap failed\n";
+        return 1;
+    }
+    close(fd);
 
     return 0;
 }

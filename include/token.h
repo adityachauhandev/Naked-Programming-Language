@@ -1,7 +1,5 @@
 #pragma once
-#include <string>
-#include <vector>
-#include <unordered_map>
+#include <string_view>
 
 enum class TokenType {
     PLUS, MUL,
@@ -19,12 +17,5 @@ enum class TokenType {
 
 struct Token{
     TokenType type;
-    std::string lexeme;
+    std::string_view lexeme;
 };
-
-void fill_symbolMap(std::unordered_map<std::string,TokenType> &symbolMap);
-void fill_strrepMap(std::unordered_map<TokenType,std::string> &strrepMap);
-
-extern std::unordered_map<TokenType,std::string> strrepMap;
-extern std::unordered_map<std::string,TokenType> symbolMap;
-extern std::vector<Token> token;
