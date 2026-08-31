@@ -13,7 +13,8 @@ private:
     const std::vector<int>& node_combined_index;
     const std::vector<InitNode>& init_node_vector;
     const std::vector<UpdateNode>& update_node_vector;
-    const std::vector<FlowNode>& flow_node_vector;
+    const std::vector<IfNode>& if_node_vector;
+    const std::vector<LoopNode>& loop_node_vector;
     const std::vector<onscNode>& onsc_node_vector;
 
     std::unordered_map<std::string_view,int> symTable;
@@ -35,7 +36,8 @@ private:
     void handle_branch(bool cond_result);
     void handle_else();
     void handle_loop(bool cond_result);
-    void handle_flow();
+    void handle_if_node();
+    void handle_loop_node();
     void handle_print();
 
 public:
@@ -44,7 +46,8 @@ public:
     node_combined_index(p.node_combined_index),
     init_node_vector(p.init_node_vector),
     update_node_vector(p.update_node_vector),
-    flow_node_vector(p.flow_node_vector),
+    if_node_vector(p.if_node_vector),
+    loop_node_vector(p.loop_node_vector),
     onsc_node_vector(p.onsc_node_vector)
     {
         this->size = node_sequence_vector.size();

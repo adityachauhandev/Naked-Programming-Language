@@ -8,4 +8,5 @@ exc:
     exc:
         du : i + 1, i
     end
+    onsc: "Loop ran % time", i
 end

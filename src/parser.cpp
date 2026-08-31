@@ -86,7 +86,7 @@ bool Parser::is_binop(TokenType tp){
     return tp == TokenType::PLUS || tp == TokenType::MUL;
 }
 
-void Parser::resolve_id(std::variant<int, std::string_view>& id, TokenType& tp)
+void Parser::resolve_id(std::variant<int, std::string_view>& id)
 {
     expect(TokenType::INTEGER, TokenType::IDENTIFIER);
 
@@ -98,7 +98,6 @@ void Parser::resolve_id(std::variant<int, std::string_view>& id, TokenType& tp)
     } else {
         id = lxm;
     }
-    tp = get_tp();
     advance();
 }
 
@@ -113,8 +112,8 @@ bool Parser::resolve_op(TokenType& op_tp) {
 
 Expression Parser::parse_expression() {
     Expression expr;
-    resolve_id(expr.id1, expr.id1type);
-    if (resolve_op(expr.optype)) resolve_id(expr.id2, expr.id2type);
+    resolve_id(expr.id1);
+    if (resolve_op(expr.optype)) resolve_id(expr.id2);
     return expr;
 }
 
@@ -138,23 +137,22 @@ void Parser::parse_update(){
     node_combined_index.push_back(update_node_vector.size() - 1);
 }
 
-void Parser::parse_controlFlow(TokenType tp){
+void Parser::parse_if(){
+    advance();
+    expect(TokenType::COLON);
+    advance();
+
     Expression expr = parse_expression();
 
-    flow_node_vector.push_back({expr,tp});
-    node_sequence_vector.push_back(Sequence::FLOW_NODE);
-    node_combined_index.push_back(flow_node_vector.size() - 1);
+    if_node_vector.push_back({expr});
+    node_sequence_vector.push_back(Sequence::IF_NODE);
+    node_combined_index.push_back(if_node_vector.size() - 1);
+
 
     expect(TokenType::BEGIN);
 
-    if(tp == TokenType::KW_IF) {
-        node_sequence_vector.push_back(Sequence::BEGIN_IF);
-        node_combined_index.push_back(-1);
-    }
-    else {
-        node_sequence_vector.push_back(Sequence::BEGIN_LOOP);
-        node_combined_index.push_back(-1);
-    }
+    node_sequence_vector.push_back(Sequence::BEGIN_IF);
+    node_combined_index.push_back(-1);
 
     advance();
     expect(TokenType::COLON);
@@ -164,28 +162,27 @@ void Parser::parse_controlFlow(TokenType tp){
 
     expect(TokenType::END);
 
-    if(tp == TokenType::KW_IF) {
-        node_sequence_vector.push_back(Sequence::END_IF);
-        node_combined_index.push_back(-1);
-    }
-    else {
-        node_sequence_vector.push_back(Sequence::END_LOOP);
-        node_combined_index.push_back(-1);
-
-    }
+    node_sequence_vector.push_back(Sequence::END_IF);
+    node_combined_index.push_back(-1);
 
     advance();
 
-    if(tp == TokenType::KW_IF && get_tp() == TokenType::KW_ELSE){
+    if(get_tp() == TokenType::KW_ELSE){
         node_sequence_vector.push_back(Sequence::ELSE_NODE);
         node_combined_index.push_back(-1);
+
         advance();
+
         expect(TokenType::COLON);
         advance();
+
         expect(TokenType::BEGIN);
+
         node_sequence_vector.push_back(Sequence::BEGIN_ELSE);
         node_combined_index.push_back(-1);
+
         advance();
+
         expect(TokenType::COLON);
         advance();
 
@@ -196,6 +193,38 @@ void Parser::parse_controlFlow(TokenType tp){
         node_combined_index.push_back(-1);
         advance();
     }
+
+}
+
+void Parser::parse_loop(){
+    advance();
+    expect(TokenType::COLON);
+    advance();
+
+    Expression expr = parse_expression();
+
+    loop_node_vector.push_back({expr});
+    node_sequence_vector.push_back(Sequence::LOOP_NODE);
+    node_combined_index.push_back(loop_node_vector.size() - 1);
+
+
+    expect(TokenType::BEGIN);
+
+    node_sequence_vector.push_back(Sequence::BEGIN_LOOP);
+    node_combined_index.push_back(-1);
+
+    advance();
+    expect(TokenType::COLON);
+    advance();
+
+    parse_instructions();
+
+    expect(TokenType::END);
+
+    node_sequence_vector.push_back(Sequence::END_LOOP);
+    node_combined_index.push_back(-1);
+
+    advance();
 }
 
 void Parser::parse_onsc(){
@@ -240,16 +269,10 @@ void Parser::parse_instructions(){
                 parse_update();
                 break;
             case TokenType::KW_IF:
-                advance();
-                expect(TokenType::COLON);
-                advance();
-                parse_controlFlow(TokenType::KW_IF);
+                parse_if();
                 break;
             case TokenType::KW_LOOP:
-                advance();
-                expect(TokenType::COLON);
-                advance();
-                parse_controlFlow(TokenType::KW_LOOP);
+                parse_loop();
                 break;
             case TokenType::KW_PRINT:
                 advance();
@@ -297,7 +320,8 @@ ParserOutput Parser::parse(){
             node_combined_index,
             init_node_vector,
             update_node_vector,
-            flow_node_vector,
+            if_node_vector,
+            loop_node_vector,
             onsc_node_vector};
 }
 

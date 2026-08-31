@@ -121,7 +121,7 @@ void Interpreter::handle_branch(bool cond_result){
     curr_index++;
     switch(cond_result){
         case false:
-            branch_yes = false;
+            branch_yes = true;
             st_skip.push(Sequence::BEGIN_IF);
             while(!st_skip.empty()){
                 curr_index++;
@@ -136,14 +136,14 @@ void Interpreter::handle_branch(bool cond_result){
             }
             break;
         case true:
-            branch_yes = true;
+            branch_yes = false;
             return;
             break;
     }
 }
 
 void Interpreter::handle_else(){
-    if(branch_yes){
+    if(!branch_yes){
         curr_index++;
         st_skip.push(Sequence::BEGIN_ELSE);
         while(!st_skip.empty()){
@@ -183,22 +183,24 @@ void Interpreter::handle_loop(bool cond_result){
     }
 }
 
-void Interpreter::handle_flow(){
+void Interpreter::handle_loop_node(){
     int actual_index = node_combined_index[curr_index];
-    const FlowNode &n = flow_node_vector[actual_index];
+    const LoopNode &n = loop_node_vector[actual_index];
 
     const Expression &expr = n.expr;
 
     bool cond_result = handle_condCheck(expr);
+    handle_loop(cond_result);
+}
 
-    switch(n.flow_tp){
-        case TokenType::KW_IF:
-            handle_branch(cond_result);
-            break;
-        case TokenType::KW_LOOP:
-            handle_loop(cond_result);
-            break;
-    }
+void Interpreter::handle_if_node(){
+    int actual_index = node_combined_index[curr_index];
+    const IfNode &n = if_node_vector[actual_index];
+
+    const Expression &expr = n.expr;
+
+    bool cond_result = handle_condCheck(expr);
+    handle_branch(cond_result);
 }
 
 void Interpreter::handle_print(){
@@ -238,8 +240,11 @@ void Interpreter::interpret(){
             case Sequence::UPDATE_NODE:
                 handle_update();
                 break;
-            case Sequence::FLOW_NODE:
-                handle_flow();
+            case Sequence::IF_NODE:
+                handle_if_node();
+                break;
+            case Sequence::LOOP_NODE:
+                handle_loop_node();
                 break;
             case Sequence::ELSE_NODE:
                 handle_else();

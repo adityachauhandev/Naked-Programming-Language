@@ -12,16 +12,15 @@ enum class Sequence {
     BEGIN,END,
     BEGIN_MAIN,END_MAIN,BEGIN_IF,END_IF,BEGIN_ELSE,END_ELSE,BEGIN_LOOP,END_LOOP,
     ELSE_NODE,
-    FLOW_NODE,
+    IF_NODE,
+    LOOP_NODE,
     PRINT_NODE
 };
 
 struct Expression{
     std::variant<int,std::string_view> id1;
-    TokenType id1type = TokenType::EMPTY;
     TokenType optype = TokenType::EMPTY;
     std::variant<int,std::string_view> id2;
-    TokenType id2type = TokenType::EMPTY;
 };
 
 struct InitNode{
@@ -34,9 +33,12 @@ struct UpdateNode{
     std::string_view target;
 };
 
-struct FlowNode{
+struct IfNode {
     Expression expr;
-    TokenType flow_tp;
+};
+
+struct LoopNode {
+    Expression expr;
 };
 
 struct onscArg{
@@ -54,7 +56,8 @@ struct ParserOutput{
     std::vector<int> node_combined_index;
     std::vector<InitNode> init_node_vector;
     std::vector<UpdateNode> update_node_vector;
-    std::vector<FlowNode> flow_node_vector;
+    std::vector<IfNode> if_node_vector;
+    std::vector<LoopNode> loop_node_vector;
     std::vector<onscNode> onsc_node_vector;
 };
 
@@ -68,7 +71,8 @@ private:
     std::vector<int> node_combined_index;
     std::vector<InitNode> init_node_vector;
     std::vector<UpdateNode> update_node_vector;
-    std::vector<FlowNode> flow_node_vector;
+    std::vector<IfNode> if_node_vector;
+    std::vector<LoopNode> loop_node_vector;
     std::vector<onscNode> onsc_node_vector;
 
     void expect(TokenType expected_tp);
@@ -85,10 +89,11 @@ private:
     void parse_update();
     bool is_binop(TokenType tp);
     bool is_bincmp(TokenType tp);
-    void resolve_id(std::variant<int, std::string_view>& id, TokenType& tp);
+    void resolve_id(std::variant<int, std::string_view>& id);
     bool resolve_op(TokenType& op_tp);
     Expression parse_expression();
-    void parse_controlFlow(TokenType tp);
+    void parse_if();
+    void parse_loop();
     void parse_onsc();
 
 public:
