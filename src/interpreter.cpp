@@ -206,16 +206,16 @@ void Interpreter::handle_if_node(){
 void Interpreter::handle_print(){
     int actual_index = node_combined_index[curr_index];
     const onscNode &n = onsc_node_vector[actual_index];
-    int arg_vec_index = 0;
+    int arg_index = 0;
 
     for (size_t i = 0; i < n.str.size(); ++i) {
         if (n.str[i] == '%') {
-            if (n.arg_vec[arg_vec_index].value.index() == 0) {
-                std::cout << std::get<0>(n.arg_vec[arg_vec_index].value);
+            if (n.arg[arg_index].index() == 0) {
+                std::cout << std::get<0>(n.arg[arg_index]);
             } else {
-                std::cout << symTable[std::get<1>(n.arg_vec[arg_vec_index].value)];
+                std::cout << symTable[std::get<1>(n.arg[arg_index])];
             }
-            arg_vec_index++;
+            arg_index++;
         } else {
             std::cout << n.str[i];
         }

@@ -229,9 +229,7 @@ void Parser::parse_loop(){
 
 void Parser::parse_onsc(){
     std::string_view str = "";
-    TokenType arg_tp = TokenType::EMPTY;
-    std::variant<int,std::string_view> arg_vl;
-    std::vector<onscArg> arg_vector;
+    std::vector<std::variant<int,std::string_view>> arg;
 
     expect(TokenType::D_QUOTE);
     advance();
@@ -240,23 +238,23 @@ void Parser::parse_onsc(){
     advance();
     expect(TokenType::D_QUOTE);
     advance();
+
     while(get_tp() == TokenType::COMMA){
         advance();
-        expect(TokenType::INTEGER,TokenType::IDENTIFIER);
-        arg_tp = get_tp();
-        if(arg_tp == TokenType::INTEGER){
+        expect(TokenType::INTEGER, TokenType::IDENTIFIER);
+
+        if(get_tp() == TokenType::INTEGER){
             int temp = 0;
             std::string_view num_lxm = get_lxm();
             std::from_chars(num_lxm.data(), num_lxm.data() + num_lxm.size(), temp);
-            arg_vl = temp;
+            arg.push_back(temp);
         }
-        else arg_vl = get_lxm();
+        else arg.push_back(get_lxm());
 
-        arg_vector.push_back({arg_vl,arg_tp});
         advance();
     }
 
-    onsc_node_vector.push_back({str,arg_vector});
+    onsc_node_vector.push_back({str,arg});
     node_sequence_vector.push_back(Sequence::PRINT_NODE);
     node_combined_index.push_back(onsc_node_vector.size() - 1);
 }

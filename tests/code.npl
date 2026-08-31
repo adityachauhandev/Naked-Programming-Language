@@ -1,12 +1,12 @@
 data:
-    100000000, num
+    10, num
     0, i
 
 instructions:
 exc:
     loop : i < num
     exc:
+        onsc : "Value of i is %", i
         du : i + 1, i
     end
-    onsc: "Loop ran % time", i
 end

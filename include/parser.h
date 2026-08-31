@@ -41,14 +41,9 @@ struct LoopNode {
     Expression expr;
 };
 
-struct onscArg{
-    std::variant<int,std::string_view> value;
-    TokenType tp;
-};
-
 struct onscNode{
     std::string_view str;
-    std::vector<onscArg> arg_vec;
+    std::vector<std::variant<int,std::string_view>> arg;
 };
 
 struct ParserOutput{
